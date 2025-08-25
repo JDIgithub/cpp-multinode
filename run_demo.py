@@ -5,11 +5,7 @@ from ray.util.scheduling_strategies import NodeAffinitySchedulingStrategy
 # Set this to the served wheel URL from your head node (step 3 in README).
 # Example:
 # WHEEL_URL = "http://10.0.1.40:8000/ray_cpp_demo-0.1.0-cp311-cp311-manylinux2014_x86_64.whl"
-WHEEL_URL = os.environ.get("RAY_CPP_DEMO_WHEEL_URL", "http://10.0.1.40:8000/CHANGE_ME.whl")
-
-if "CHANGE_ME" in WHEEL_URL:
-    print("Please set WHEEL_URL in run_demo.py (or env var RAY_CPP_DEMO_WHEEL_URL) to your wheel URL, then rerun.")
-    sys.exit(1)
+WHEEL_URL = os.environ.get("RAY_CPP_DEMO_WHEEL_URL", "http://10.0.1.40:7777/ray_cpp_demo-0.1.0-cp312-cp312-linux_x86_64.whl")
 
 print(f"Using wheel: {WHEEL_URL}")
 
