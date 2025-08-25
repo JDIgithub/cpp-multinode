@@ -5,7 +5,7 @@
 namespace py = pybind11;
 
 // Edit this message and rebuild to see it propagate cluster-wide
-static const char* kMessage = "Hello from C++ --------------------------------------------";
+static const char* kMessage = "Hello from C++ new";
 
 std::string message() {
     return std::string(kMessage);
