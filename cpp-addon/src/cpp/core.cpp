@@ -17,7 +17,7 @@ void print_message() {
 }
 
 PYBIND11_MODULE(_core, m) {
-    m.doc() = "ray_cpp_demo C++ core";
+    m.doc() = "cpp_addon C++ core";
     m.def("message", &message, "Return the C++ message");
     m.def("print_message", &print_message, "Print the message from C++");
 }

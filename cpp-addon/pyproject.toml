@@ -1,0 +1,22 @@
+[build-system]
+requires = ["scikit-build-core>=0.9", "pybind11>=2.11", "setuptools>=68", "wheel"]
+build-backend = "scikit_build_core.build"
+
+[project]
+name = "cpp-addon"           # distribution name (pip)
+version = "0.1.0"                 # bump on every C++ change
+requires-python = ">=3.10"
+description = "C++ extension"
+
+[tool.scikit-build]
+wheel.packages = ["src/cpp_addon"]
+cmake.version = ">=3.18"
+build-dir = "build/{wheel_tag}"
+
+[tool.scikit-build.sdist]
+include = [
+  "CMakeLists.txt",
+  "pyproject.toml",
+  "src/cpp/core.cpp",
+  "src/cpp_addon/__init__.py"
+]
