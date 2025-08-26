@@ -3,8 +3,8 @@ requires = ["scikit-build-core>=0.9", "pybind11>=2.11", "setuptools>=68", "wheel
 build-backend = "scikit_build_core.build"
 
 [project]
-name = "cpp-addon"           # distribution name (pip)
-version = "0.1.0"                 # bump on every C++ change
+name = "cpp-addon"
+version = "0.1.1"
 requires-python = ">=3.10"
 description = "C++ extension"
 
