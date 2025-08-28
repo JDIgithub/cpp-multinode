@@ -34,16 +34,63 @@ echo "==> CPP_DIR=$CPP_DIR"
 echo "==> LOCAL_DIR=$LOCAL_DIR"
 echo "==> Using temp HTTP http://$HOST:$PORT/"
 
+# Ensure temp HTTP is cleaned up even on error
+cleanup() {
+  if [[ -f /tmp/wheel_http.pid ]]; then
+    pid="$(cat /tmp/wheel_http.pid || true)"
+    [[ -n "$pid" ]] && kill "$pid" >/dev/null 2>&1 || true
+    rm -f /tmp/wheel_http.pid
+  fi
+}
+trap cleanup EXIT
+
+
+BUMP=0
+if [[ "${1:-}" == "--bump" ]]; then
+  BUMP=1
+fi
+
+# ---- Bump patch version in pyproject.toml ----
+if [[ $BUMP -eq 1 ]]; then
+  echo "==> Bumping patch version in $CPP_DIR/pyproject.toml"
+  "$PY" - "$CPP_DIR/pyproject.toml" <<'PY'
+import sys, re, tomllib
+from pathlib import Path
+
+p = Path(sys.argv[1])
+data = p.read_text()
+
+cfg = tomllib.loads(data)
+ver = cfg["project"]["version"]
+maj, mi, pa = map(int, ver.split("."))
+new = f"{maj}.{mi}.{pa+1}"
+
+new_data = re.sub(
+    r'(?m)^version\s*=\s*"\d+\.\d+\.\d+"\s*$',
+    f'version = "{new}"',
+    data,
+)
+
+p.write_text(new_data)
+print(f"Bumped version: {ver} -> {new}")
+PY
+fi
+
+
 # 1) Build wheel
 pushd "$CPP_DIR" >/dev/null
 rm -rf build/ dist/
 $PY -m build --wheel
 WHEEL_PATH="$(find "$CPP_DIR/dist" -maxdepth 1 -type f -name '*.whl' \
             -printf '%T@ %p\n' | sort -nr | head -n1 | cut -d' ' -f2-)"
-echo "==> WHEEL_PATH: $WHEEL_PATH"
-WHEEL_FILE="$(basename "$WHEEL_PATH")"
-echo "==> WHEEL_FILE: $WHEEL_FILE"
 popd >/dev/null
+
+if [[ -z "${WHEEL_PATH:-}" || ! -f "$WHEEL_PATH" ]]; then
+  echo "ERROR: build produced no wheel" >&2
+  exit 1
+fi
+
+WHEEL_FILE="$(basename "$WHEEL_PATH")"
 SHA256="$(sha256sum "$WHEEL_PATH" | awk '{print $1}')"
 echo "==> Built: $WHEEL_FILE  (sha256=$SHA256)"
 
@@ -63,5 +110,8 @@ if [[ -f /tmp/wheel_http.pid ]] && ps -p "$(cat /tmp/wheel_http.pid)" >/dev/null
   rm -f /tmp/wheel_http.pid
 fi
 
+PYMAJ="$($PY -c 'import sys; print(sys.version_info.major)')"
+PYMIN="$($PY -c 'import sys; print(sys.version_info.minor)')"
+
 echo "==> Done. Wheel cached on all nodes in $LOCAL_DIR"
-echo "    Driver can use: CPP_WHEEL_LOCAL=\"$LOCAL_DIR/cpp_addon-latest-cp\${PYMAJ}\${PYMIN}.whl\""
+echo "    Driver can use: CPP_WHEEL_LOCAL=\"$LOCAL_DIR/cpp_addon-latest-cp${PYMAJ}${PYMIN}.whl\""
